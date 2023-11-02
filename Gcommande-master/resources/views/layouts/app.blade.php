@@ -6,6 +6,7 @@
     <title>Document</title>
     @vite('resources/css/app.css')
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
 </head>
 <body class="bg-slate-100">
     @include('partials.navbar')
@@ -14,5 +15,6 @@
     <div class="m-4">
         @yield('content')
     </div>
+
 </body>
 </html>

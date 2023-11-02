@@ -22,6 +22,10 @@
             <label for="quantite" class="form-label">Quantité:</label>
             <input type="number" id="quantity" required="required" name="quantity" class="form-control">
         </div>
+
+        <input type="hidden" name="orders" id="orders" value="[]">
+
+
         <button type="submit" class="bg-blue-500 text-white border-white p-2 rounded-smy">Ajouter une commande</button>
     </form>
     <table class="min-w-full bg-white" id="commande-list"">
@@ -49,6 +53,9 @@
         </tbody>
     </table>
 
+    <button type="button" id="enregistrer-commandes" class="bg-blue-500 text-white border-white p-2 rounded-smy">Enregistrer les commandes</button>
+  
+
     <!-- Inclure jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -56,16 +63,51 @@
 
     $(document).ready(function() {
 
+        function saveOrders() {
+            var ordersData = $('#orders').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '{{ route('order.store') }}',
+                data: {
+                    orders: ordersData,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    console.log('Commandes enregistrées avec succès');
+                    // Vous pouvez également ajouter ici du code pour gérer la réponse du contrôleur, comme une redirection
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur lors de lenregistrement des commandes');
+                }
+            });
+        }
+
+        
         $('#commande-form').on('submit', function(e) {
             e.preventDefault(); // Empêche la soumission normale du formulaire
             var formData = $(this).serialize();
             var produit =JSON.parse($('#produit').val()); 
             var price = produit.purchasing_price;
             var product_name = produit.wording; 
-            console.log("product_name",product_name)
+            var product_id = produit.id; 
+            
             var quantite = $('#quantity').val(); // Récupère la valeur du champ quantité
             var prixTotal = price * quantite; // Calcule le prix total
             console.log('prixttt',quantite);
+
+            var commande = {
+                product_id: product_id,
+                quantity: quantite,
+                total_price: prixTotal
+            };
+
+            var existingOrders = JSON.parse($('#orders').val());
+
+            existingOrders.push(commande);
+
+            $('#orders').val(JSON.stringify(existingOrders));
+
 
             // Créez un élément HTML pour la commande
             var commandeHtml = '<tr class=" text-gray-700 uppercase text-sm leading-normal border-b-2 border-black relative top-0">';
@@ -89,40 +131,12 @@
         $('#commande-list').on('click', '.delete-commande', function() {
             $(this).closest('tr').remove();
         });
-        //add
 
 
-        // Soumission du formulaire via Ajax
-        // $('#commande-form').on('submit', function(e) {
-        //     e.preventDefault(); // Empêche la soumission normale du formulaire
-        //     var formData = $(this).serialize();
-            
-        //     console.log("test",formData);
-        //     $.ajax({
-        //         type: 'POST',
-        //         url:'{{ url('order') }}/' + 1 + '/new', 
-        //         data: formData,
-        //         success: function(response) {
-        //             // Mise à jour de la liste des commandes
-        //             $('#commande-list').html(response);
-        //         }
-        //     });
-        // });
-
-        // Suppression de commande via Ajax
-        $('#commande-list').on('click', '.delete-commande', function(e) {
-            e.preventDefault();
-            var id = $(this).data('id');
-
-            // $.ajax({
-            //     type: 'DELETE',
-            //     url: '{{ url('commande/delete') }}/' + id,
-            //     success: function(response) {
-            //         // Mise à jour de la liste des commandes
-            //         $('#commande-list').html(response);
-            //     }
-            // });
+        $('#enregistrer-commandes').on('click', function() {
+            saveOrders();
         });
+       
     });
 </script>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateOrderRequest;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -25,15 +26,27 @@ class OrderController extends Controller
             'order' => $order
         ]);
     }
-    public function store (string $product, CreateOrderRequest $request) {
+    public function store (Request $request) {
         
-        $productData = Product::findOrFail($product);
-        $order = new Order([
-            'quantity' => $request->validated('quantity'),
-            'price' =>  $request->validated('quantity')*$productData->selling_price,
-        ]);
-        $order->product_id= $product;
-        $order->save(); 
+        $invoice = new Invoice();
+        $orders = json_decode($request->input('orders'), true);
+
+        foreach ($orders as $orderData) {
+            // Enregistrez chaque commande dans la base de données
+            $order = new Order();
+            $order->quantity = $orderData['quantity'];
+            $order->product_id = $orderData['product_id'];
+            $order->price = $orderData['total_price'];
+            $order->save();
+        }
+
+        // $productData = Product::findOrFail($product);
+        // $order = new Order([
+        //     'quantity' => $request->validated('quantity'),
+        //     'price' =>  $request->validated('quantity')*$productData->selling_price,
+        // ]);
+        // $order->product_id= $product;
+        // $order->save(); 
 
         return redirect()->route('order.index')
         ->with('success', 'Commande enregistré!');
