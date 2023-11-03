@@ -3,35 +3,39 @@
 @section('content')
     @include('partials.sucessmessage')
     <div class="flex justify-between my-2">
-        <button class="bg-blue-500 text-white border-white p-2 rounded-sm"> <a href="{{ route('product.index')}}">COMMANDER</a></button>
+        {{-- <button class="bg-blue-500 text-white border-white p-2 rounded-sm"> <a href="{{ route('product.index')}}">COMMANDER</a></button> --}}
         <h1 class="text-2xl">Liste de Commande</h1>
     </div>
     <form id="commande-form">
         @csrf
-        <div class="mb-3">
-            <label for="produit" class="form-label">Choisir un produit:</label>
-            <select id="produit" name="produit" class="form-select" required>
+        <div class="row">
+            <div class="col-md-4">
+                <label for="produit" class="form-label">Choisir un produit:</label>
+                <select id="produit" name="produit" class="form-select" required>
+                    
+                    @foreach ($produits as $produit)
+                        <option value="{{ $produit }}">{{ $produit->wording }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="quantite" class="form-label">Quantité:</label>
+                <input type="number" id="quantity" required="required" min="1" name="quantity" class="form-control">
+            </div>
+
+            <input type="hidden" name="orders" id="orders" value="[]">
                 
-                @foreach ($produits as $produit)
-                    <option value="{{ $produit }}">{{ $produit->wording }}</option>
-                @endforeach
-            </select>
+            <div class="col-md-4">  
+                <div class="form-group">  
+                    <button type="submit" class="btn btn-primary">Ajouter une commande</button>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="quantite" class="form-label">Quantité:</label>
-            <input type="number" id="quantity" required="required" name="quantity" class="form-control">
-        </div>
-
-        <input type="hidden" name="orders" id="orders" value="[]">
-
-
-        <button type="submit" class="bg-blue-500 text-white border-white p-2 rounded-smy">Ajouter une commande</button>
     </form>
-    <table class="min-w-full bg-white" id="commande-list"">
+    <table class="table" id="commande-list"">
         <thead>
-            <tr class=" text-gray-700 uppercase text-sm leading-normal border-b-2 border-black relative top-0">
-                <!-- <th >Id</th> -->
+            <tr >
                 <th class="py-4">Produit</th>
                 <th>Quantité</th>   
                 <th>Prix</th>
@@ -53,16 +57,19 @@
         </tbody>
     </table>
 
+    <p>Total des commandes : <span id="total-commands">0</span> Ar</p>
+
     <button type="button" id="enregistrer-commandes" class="bg-blue-500 text-white border-white p-2 rounded-smy">Enregistrer les commandes</button>
   
 
     <!-- Inclure jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
 
 <script>
 
     $(document).ready(function() {
 
+        // fonction pour enregistrer le totalité de la commande vers le controller
         function saveOrders() {
             var ordersData = $('#orders').val();
 
@@ -81,6 +88,31 @@
                     console.error('Erreur lors de lenregistrement des commandes');
                 }
             });
+        }
+
+        //Fonction pour le calcule de la total de la commande
+        function calculateTotal() {
+            var ordersData = JSON.parse($('#orders').val());
+            var total = 0;
+
+            console.log("ordersData",ordersData)
+
+            // Parcourez toutes les commandes pour calculer le total
+            ordersData.forEach(function(order) {
+                total += order.total_price;
+            });
+
+            // Mettez à jour l'affichage du total
+            $('#total-commands').text(total);
+
+            console.log("total",total);
+
+            if (ordersData.length > 0 && total > 0) {
+                $('#enregistrer-commandes').show();
+            } else {
+                $('#total-commands').text(0);
+                $('#enregistrer-commandes').hide();
+            }
         }
 
         
@@ -112,10 +144,10 @@
             // Créez un élément HTML pour la commande
             var commandeHtml = '<tr class=" text-gray-700 uppercase text-sm leading-normal border-b-2 border-black relative top-0">';
             commandeHtml += '<td>' + product_name + '</td>';
-            commandeHtml += '<td class="py-4">' + quantite + '</td>';
-            commandeHtml += '<td>' + prixTotal + '</td>';
+            commandeHtml += '<td>' + quantite + '</td>';
+            commandeHtml += '<td>' + prixTotal + ' Ar </td>';
             commandeHtml += '<td>';
-            commandeHtml += '<a class="bg-red-500 text-white border-white p-2 rounded-sm delete-commande" href="#">Supprimer</a>';
+            commandeHtml += '<button class="bg-red-500 text-white border-white p-2 rounded-sm delete-commande" href="#">Supprimer</button>';
             commandeHtml += '</td>';
             commandeHtml += '</tr>';
 
@@ -124,18 +156,38 @@
 
             // Effacez les champs du formulaire
             $('#produit').val('');
-            $('#quantite').val('');
+            $('#quantity').val('');
+
+            calculateTotal();
         });
 
         // Gérez la suppression d'une commande
         $('#commande-list').on('click', '.delete-commande', function() {
+
+            var commandId = $(this).data('product_id');
+
             $(this).closest('tr').remove();
+            calculateTotal();
+
+            
+
+            // Parcourez les commandes et supprimez celle avec l'ID correspondant
+            ordersData = ordersData.filter(function(order) {
+                return order.product_id !== commandId;
+            });
+
+            // Mettez à jour le champ #orders avec le tableau mis à jour
+            $('#orders').val(JSON.stringify(ordersData));
+
         });
 
 
         $('#enregistrer-commandes').on('click', function() {
             saveOrders();
         });
+
+        $('#enregistrer-commandes').hide();
+        
        
     });
 </script>

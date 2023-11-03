@@ -6,6 +6,7 @@
     <title>Document</title>
     @vite('resources/css/app.css')
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
 
 </head>
 <body class="bg-slate-100">
@@ -15,6 +16,7 @@
     <div class="m-4">
         @yield('content')
     </div>
+    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
 
 </body>
 </html>

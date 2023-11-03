@@ -29,6 +29,7 @@ class OrderController extends Controller
     public function store (Request $request) {
         
         $invoice = new Invoice();
+        $invoice->prod
         $orders = json_decode($request->input('orders'), true);
 
         foreach ($orders as $orderData) {
